@@ -1,0 +1,255 @@
+class Singleton:
+    _instance = None
+
+    def __new__(cls, value,*args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
+            cls._instance.value = value
+        return cls._instance
+
+# Client code
+singleton1 = Singleton([3,'Ahmed','20220007'])
+singleton2 = Singleton(10)
+
+print(singleton1 is singleton2)  # Output: True
+print(singleton1.value)
+print(singleton2.value)
+print('#######################')
+print(id(singleton1.value))
+print(id(singleton2.value))
+-----------------------------------------------------------------------------------------
+
+
+class FlyweightFactory:
+    def __init__(self):
+        self.flyweights = {}
+
+    def get_flyweight(self, key):
+        if key not in self.flyweights:
+            self.flyweights[key] = Flyweight(key)
+        return self.flyweights[key]
+
+class Flyweight:
+    def __init__(self, key):
+        self.key = key
+
+    def operation(self, out_state):
+        print(f"Flyweight with id {id(self)} and key {self.key} and out state {out_state}")
+
+class Client:
+    def __init__(self, flyweight_factory):
+        self.flyweight_factory = flyweight_factory
+
+    def operation(self, key, out_state):
+        flyweight = self.flyweight_factory.get_flyweight(key)
+        flyweight.operation(out_state)
+
+if __name__ == "__main__":
+    flyweight_factory = FlyweightFactory()
+    client = Client(flyweight_factory)
+    client.operation("key1", "out_state1")
+    client.operation("key2", "out_state2")
+    client.operation("key1", "out_state3")
+-----------------------------------------------------------------------------------------------------
+
+
+from abc import ABC, abstractmethod
+
+# Product interface
+class Animal(ABC):
+    @abstractmethod
+    def speak(self):
+        pass
+
+# Concrete products
+class Dog(Animal):
+    def speak(self):
+        return "Woof!"
+
+class Cat(Animal):
+    def speak(self):
+        return "Meow!"
+
+# Creator interface
+class AnimalFactory(ABC):
+    @abstractmethod
+    def create_animal(self):
+        pass
+
+# Concrete creators
+class DogFactory(AnimalFactory):
+    def create_animal(self):
+        return Dog()
+
+class CatFactory(AnimalFactory):
+    def create_animal(self):
+        return Cat()
+
+# Client code
+def client_code(factory):
+    animal = factory.create_animal()
+    print(animal.speak())
+
+# Using the factories
+dog_factory = DogFactory()
+client_code(dog_factory)  # Output: Woof!
+
+cat_factory = CatFactory()
+client_code(cat_factory)  # Output: Meow!
+---------------------------------------------------------------------------------------------
+*facade
+
+# Subsystem classes
+class CPU:
+    def freeze(self):
+        print("CPU: Freezing")
+
+    def jump(self, address):
+        print(f"CPU: Jumping to address {address}")
+
+    def execute(self):
+        print("CPU: Executing")
+
+class Memory:
+    def load(self, address, data):
+        print(f"Memory: Loading data '{data}' into address {address}")
+
+class HardDrive:
+    def read(self, sector, size):
+        return f"Data from sector {sector} with size {size}"
+
+# Facade class
+class ComputerFacade:
+    def __init__(self):
+        self.cpu = CPU()
+        self.memory = Memory()
+        self.hard_drive = HardDrive()
+
+    def start_computer(self):
+        print("ComputerFacade: Starting computer")
+        self.cpu.freeze()
+        boot_sector = self.hard_drive.read("Sector 0", 512)
+        self.memory.load("0x00", boot_sector)
+        self.cpu.jump("0x00")
+        self.cpu.execute()
+
+# Client code
+computer = ComputerFacade()
+computer.start_computer()
+-------------------------------------------------------------------------------------------------
+*builder
+
+from abc import ABC, abstractmethod
+
+# Product
+class Pizza:
+    def __init__(self, size, cheese, toppings):
+        self.size = size
+        self.cheese = cheese
+        self.toppings = toppings
+
+    def __str__(self):
+        return f"Pizza(size={self.size}, cheese={self.cheese}, toppings={self.toppings})"
+
+# Builder interface
+class PizzaBuilder:
+    @abstractmethod
+    def set_size(self, size):
+        pass
+
+    @abstractmethod
+    def set_cheese(self, cheese):
+        pass
+
+    @abstractmethod
+    def set_toppings(self, toppings):
+        pass
+
+    @abstractmethod
+    def build(self):
+        pass
+
+# Concrete builder
+class PizzaBuilderImpl(PizzaBuilder):
+    def __init__(self):
+        self.pizza = Pizza(size=None, cheese=None, toppings=[])
+
+    def set_size(self, size):
+        self.pizza.size = size
+
+    def set_cheese(self, cheese):
+        self.pizza.cheese = cheese
+
+    def set_toppings(self, toppings):
+        self.pizza.toppings = toppings
+
+    def build(self):
+        return self.pizza
+
+# Director
+class Cook:
+    def __init__(self):
+        self.builder = PizzaBuilderImpl()
+
+    def construct_pizza(self, size, cheese, toppings):
+        self.builder.set_size(size)
+        self.builder.set_cheese(cheese)
+        self.builder.set_toppings(toppings)
+        return self.builder.build()
+
+# Client code
+cook = Cook()
+pizza = cook.construct_pizza(size="large", cheese="mozzarella", toppings=["pepperoni", "mushrooms"])
+print(pizza)  # Output: Pizza(size=large, cheese=mozzarella, toppings=['pepperoni', 'mushrooms'])
+
+--------------------------------------------------------------------------------------------------------------------------
+* memento
+
+
+class Originator:
+    def _init_(self):
+        self._state = None
+    
+    def set_state(self, state):
+        self._state = state
+
+    def save_to_memento(self):
+        return Memento(self._state)
+    
+    def restore_from_memento(self, memento):
+        self._state = memento.get_state()
+
+class Memento:
+    def _init_(self, state):
+        self._state = state
+    
+    def get_state(self):
+        return self._state
+
+class Caretaker:
+    def _init_(self):
+        self._memento = None
+    
+    def save_memento(self, memento):
+        self._memento = memento
+    
+    def retrieve_memento(self):
+        return self._memento
+    
+
+# if _name_ == '_main_':
+#     originator = Originator()
+#     caretaker = Caretaker()
+
+#     originator.set_state('State1')
+#     caretaker.save_memento(originator.save_to_memento())  # save State1
+
+#     originator.set_state('State2')
+#     print('Current State -->', originator._state)
+
+#     originator.restore_from_memento(caretaker.retrieve_memento())  # retrieve State1
+#     print('Restored State -->', originator._state)
+
+
+
+
